@@ -2,149 +2,111 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Music Hub Pro - Full Version</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Hub GOAT Edition</title>
     <style>
-        :root { --neon: #00ff88; --dark: #0a0a0a; }
+        :root { --neon: #00ff88; --dark: #080808; }
         body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        
         .header { width: 100%; padding: 40px 0; background: #000; border-bottom: 2px solid var(--neon); text-align: center; }
-        input { width: 80%; max-width: 500px; padding: 15px 25px; border-radius: 50px; border: 1px solid #333; background: #111; color: #fff; font-size: 18px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 20px rgba(0,255,136,0.3); }
-
-        .results { width: 90%; max-width: 700px; margin-top: 30px; padding-bottom: 160px; }
-        .track { display: flex; align-items: center; background: #161616; padding: 15px; margin-bottom: 10px; border-radius: 12px; cursor: pointer; border: 1px solid #222; transition: 0.2s; }
-        .track:hover { border-color: var(--neon); background: #1a1a1a; transform: scale(1.01); }
-        .track img { width: 50px; height: 50px; border-radius: 6px; margin-right: 15px; }
-        .info { flex-grow: 1; text-align: left; }
+        input { width: 85%; max-width: 500px; padding: 15px 25px; border-radius: 50px; border: 1px solid #333; background: #111; color: #fff; font-size: 18px; outline: none; }
+        .results { width: 95%; max-width: 700px; margin-top: 20px; padding-bottom: 160px; }
+        .track { display: flex; align-items: center; background: #121212; padding: 15px; margin-bottom: 8px; border-radius: 12px; cursor: pointer; border: 1px solid #1a1a1a; }
+        .track:hover { border-color: var(--neon); background: #1a1a1a; }
+        .info { flex-grow: 1; margin-left: 15px; }
         .info b { display: block; color: var(--neon); font-size: 16px; }
-        .info span { color: #888; font-size: 14px; }
-
-        .player-bar { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.95); backdrop-filter: blur(10px); border-top: 2px solid var(--neon); padding: 20px; text-align: center; box-sizing: border-box; }
-        #status { margin-bottom: 10px; font-size: 14px; color: var(--neon); font-weight: bold; min-height: 20px; }
-        audio { width: 100%; max-width: 700px; filter: invert(1) hue-rotate(85deg); }
-        
-        .loader { display: none; margin: 20px; border: 3px solid #333; border-top: 3px solid var(--neon); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .player-bar { position: fixed; bottom: 0; width: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); border-top: 2px solid var(--neon); padding: 20px; text-align: center; box-sizing: border-box; }
+        #status { margin-bottom: 10px; font-size: 13px; color: var(--neon); font-weight: bold; }
+        audio { width: 100%; max-width: 600px; filter: invert(1) hue-rotate(80deg); }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1 style="letter-spacing: 5px; font-weight: 200; margin-bottom: 20px;">MUSIC HUB</h1>
-    <input type="text" id="search" placeholder="Введите название песни...">
+    <h1 style="letter-spacing: 5px; font-weight: 200; margin-bottom: 20px;">ULTIMATE PLAYER</h1>
+    <input type="text" id="search" placeholder="Ищу везде: YT, VK, SC, MP3...">
 </div>
 
-<div class="loader" id="loader"></div>
-
-<div class="results" id="res">
-    <p style="text-align: center; color: #444;">Найдите трек, чтобы услышать полную версию</p>
-</div>
+<div class="results" id="res"></div>
 
 <div class="player-bar">
-    <div id="status">Ожидание...</div>
+    <div id="status">Готов к поиску полных версий</div>
     <audio id="audio" controls autoplay></audio>
 </div>
 
 <script>
-    // === ВСТАВЬ СВОЮ ССЫЛКУ НИЖЕ ===
+    // ВСТАВЬ СВОЮ ССЫЛКУ ИЗ GOOGLE SCRIPTS
     const PROXY = "https://script.google.com/macros/s/AKfycbw6de1PMwI3ybomuD9QSEHuTghYT4tm_xBKnTfYY1kECjNvTVNYDh6mVd623I8LnZECCQ/exec"; 
 
     const input = document.getElementById('search');
     const resDiv = document.getElementById('res');
     const audio = document.getElementById('audio');
     const status = document.getElementById('status');
-    const loader = document.getElementById('loader');
 
     input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') search(input.value);
     });
 
     async function search(q) {
-        if(!q) return;
-        loader.style.display = 'block';
-        resDiv.innerHTML = "";
-        status.innerText = "Ищем треки в облаке...";
-        
+        resDiv.innerHTML = "<p style='text-align:center'>Поиск по базам...</p>";
         try {
             const searchUrl = `https://api.deezer.com/search?q=${encodeURIComponent(q)}`;
-            const response = await fetch(PROXY + "?url=" + encodeURIComponent(searchUrl));
-            const data = await response.json();
-            
-            loader.style.display = 'none';
+            const res = await fetch(PROXY + "?url=" + encodeURIComponent(searchUrl));
+            const data = await res.json();
             render(data.data);
-        } catch (err) {
-            loader.style.display = 'none';
-            resDiv.innerHTML = "<p style='color:red; text-align:center;'>Ошибка сети. Проверьте прокси.</p>";
-        }
+        } catch (err) { status.innerText = "Ошибка прокси!"; }
     }
 
     function render(tracks) {
-        if (!tracks || tracks.length === 0) {
-            resDiv.innerHTML = "<p style='text-align:center;'>Ничего не нашли</p>";
-            return;
-        }
+        resDiv.innerHTML = "";
         tracks.forEach(t => {
             const div = document.createElement('div');
             div.className = 'track';
-            div.innerHTML = `
-                <img src="${t.album.cover_small}">
-                <div class="info">
-                    <b>${t.title}</b>
-                    <span>${t.artist.name}</span>
-                </div>
-                <div style="color:var(--neon)">▶</div>
-            `;
-            div.onclick = () => playFull(t.artist.name, t.title, t.preview);
+            div.innerHTML = `<img src="${t.album.cover_small}" style="border-radius:5px"><div class="info"><b>${t.title}</b><span>${t.artist.name}</span></div>`;
+            div.onclick = () => tryPlayFull(t.artist.name, t.title, t.preview);
             resDiv.appendChild(div);
         });
     }
 
-    async function playFull(artist, title, preview) {
-        const fullTitle = `${artist} - ${title}`;
-        status.innerHTML = `<span style="color:orange">Ищем ПОЛНУЮ версию: ${fullTitle}...</span>`;
+    async function tryPlayFull(artist, title, preview) {
+        const q = encodeURIComponent(`${artist} ${title}`);
+        status.innerHTML = "🔍 Ищем полную версию (может занять 5-10 сек)...";
         
-        const query = encodeURIComponent(`${artist} ${title}`);
-        // Источники для полных версий
-        const source1 = `https://api.vkmusic.me/search?q=${query}`;
-        const source2 = `https://musicapi.x0.at/play?q=${query}`;
+        // Список самых мощных шлюзов
+        const sources = [
+            `https://api.vkmusic.me/search?q=${q}`,
+            `https://musicapi.x0.at/play?q=${q}&engine=youtube`,
+            `https://api-music.xyz/search?q=${q}`
+        ];
 
-        let isFull = false;
+        let success = false;
 
-        // Функция запуска и проверки длины
-        const trySource = async (srcUrl, isFinalAttempt = false) => {
-            audio.src = PROXY + "?url=" + encodeURIComponent(srcUrl);
-            
-            return new Promise((resolve) => {
-                const checkMeta = () => {
-                    if (audio.duration > 45) { // Если дольше 45 сек - это успех
-                        isFull = true;
-                        status.innerHTML = `<span style="color:#00ff88">Играет ПОЛНАЯ версия: ${fullTitle}</span>`;
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
-                };
-                audio.addEventListener('loadedmetadata', checkMeta, { once: true });
-                setTimeout(() => resolve(false), 4000); // Тайм-аут 4 сек на попытку
-            });
-        };
-
-        // Логика переключения
-        const success = await trySource(source1);
-        if (!success) {
-            status.innerHTML = `<span style="color:yellow">Первый сервер пуст, пробуем второй...</span>`;
-            const success2 = await trySource(source2);
-            if (!success2) {
-                status.innerHTML = `<span style="color:red">Полная версия не найдена. Демо-режим (30 сек)</span>`;
-                audio.src = preview;
-            }
+        for (let src of sources) {
+            if (success) break;
+            try {
+                const streamUrl = PROXY + "?url=" + encodeURIComponent(src);
+                audio.src = streamUrl;
+                
+                // Ждем начала проигрывания и проверяем длину
+                await new Promise((resolve) => {
+                    const t = setTimeout(() => resolve(), 6000);
+                    audio.onloadedmetadata = () => {
+                        if (audio.duration > 45) {
+                            success = true;
+                            status.innerHTML = "✅ ИГРАЕТ ПОЛНАЯ ВЕРСИЯ";
+                            resolve();
+                        }
+                    };
+                    audio.onerror = () => resolve();
+                });
+            } catch (e) {}
         }
-        
-        audio.play().catch(() => {
-            status.innerText = "Ошибка воспроизведения. Попробуйте другой трек.";
-        });
+
+        if (!success) {
+            status.innerHTML = "⚠️ Полная версия не найдена, включаю демо";
+            audio.src = preview;
+        }
+        audio.play();
     }
 </script>
-
 </body>
 </html>
